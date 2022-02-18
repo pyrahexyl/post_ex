@@ -10,8 +10,9 @@
 パッケージをインストールするには、
 git cloneしたファイル群を
 任意のディレクトリに設置後、
-```ruby:background.js
-//3行目
+```
+# background.js
+//line 3
 const apiBase = ''
 ```
 ここのapiBaseに、
