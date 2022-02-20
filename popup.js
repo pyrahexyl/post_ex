@@ -1,26 +1,57 @@
-const api_endpoint = apiBase+"/list";
-const get = (api_endpoint) => {
+
+let results = document.getElementById('results');
+const searchHistory = (searchText) => {
     return new Promise ((resolve,reject) => {
         $.ajax({
-            url: api_endpoint,
-            type: 'get',
+            url: "<request query to athena, lambda endpoint>",
+            type: 'post',
             dataType: 'json',
-        }).then(function(response){
-            resolve({'status': 200,message:response});
-        }, function(err){
-            reject({'status': 500,message:err});
+            body:JSON.stringify({searchText:searchText})
+        }).then((response) => {
+            resolve(response);
+        }).fail((err) => {
+            reject(err);
         });
     })
 }
+const createTableBody = (history) => {
+    const historyArr = history;
+    for(let i=0;i<historyArr.length;i++){
+        let historyText = historyArr[i].text;
+        if(!historyText || historyText === 'undefined'){
+            continue;
+        }
+        let trElem = document.createElement('tr');
+        let tdUrl = document.createElement('td');
+        let tdTimestamp = document.createElement('td');
+        let tdText = document.createElement('td');
+        let linkTag = document.createElement('a');
+        linkTag.innerText = historyArr[i].title;
+        linkTag.setAttribute('href',historyArr[i].url);
+        tdUrl.innerHTML = linkTag;
+        tdTimestamp.innerText = historyArr[i].timestamp;
+        /*60bまで表示*/
+        let historyTextStr = historyText.length>60?historyText.slice( 0, 60 ):historyText.text;
+        tdText.innerText = historyTextStr;
+        trElem.appendChild(tdUrl);
+        trElem.appendChild(tdTimestamp);
+        trElem.appendChild(tdText);
+        results.appendChild(trElem);
+    }
+}
 $(document).ready(() => {
-    const histories = get(api_endpoint);
-    $(document).on('click', 'button', (histories) => {
-        const searchWord = $('#search').value();
-        const results = histories.filter(history => {
-            if(history.text?.includes(searchWord)){
-                return history;
-            }
-        })
-        $('#results').text(results);
+    const history = localStorage.getItem('tora_histories');
+    if(history){
+        createTableBody(history);
+    }
+    $(document).on('click', 'button', async () => {
+        const searchText = document.getElementById('search');
+        const histories = await searchHistory(searchText);
+        if(histories){
+            localStorage.setItem('tora_histories', histories);
+            createTableBody(histories);
+        }else{
+            results.innerText = "取得エラーです。";
+        }
     });
 });

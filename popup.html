@@ -1,105 +1,35 @@
-<!doctype htm>
-<html>
-<head>
-  <script src="https://sdk.amazonaws.com/js/aws-sdk-2.410.0.min.js"></script>
-  <script>
-    var athena = new AWS.Athena({
-      accessKeyId: 'AKIAWJGVTHVGZU253KOW',
-      secretAccessKey: 'NxS4lMlWNca33Hfg4DTRdOVyPNmPTHXxx3KQZ',
-      region: 'ap-northeast-1'
-    });
- 
-    function startQueryExecution(callback) {
-      var params = {
-        QueryString: 'SELECT * FROM "prd"."prd" limit 1000',
-        ResultConfiguration: {
-          OutputLocation: 's3://prd.storage1/athena/table1_result'
-        }
-      };
-      athena.startQueryExecution(params, function(err, data) {
-        if (err) {
-          console.log(err);
-          return;
-        }
-        callback(data.QueryExecutionId);
-      });
-    }
- 
-    function getQueryExecution(queryExecutionId, callback) {
-      var params = {
-        QueryExecutionId: queryExecutionId
-      };
-      athena.getQueryExecution(params, function(err, data) {
-        if (err) {
-          console.log(err);
-          return;
-        }
-        if (data.QueryExecution.Status.State == 'RUNNING') {
-          getQueryExecution(queryExecutionId, callback);
-          return;
-        }
-        callback();
-      });
-    }
- 
-    function getQueryResults(queryExecutionId, callback) {
-      var params = {
-        QueryExecutionId: queryExecutionId
-      };
-      athena.getQueryResults(params, function(err, data) {
-        if (err) {
-          console.log(err);
-          return;
-        }
-        callback(data);
-      });
-    }
- 
-    function showData(data) {
-      var table = '<table>';
-      for (rowNo in data.ResultSet.Rows) {
-        table += '<tr>';
-        for (colNo in data.ResultSet.Rows[rowNo].Data) {
-          table += '<td>';
-          table += data.ResultSet.Rows[rowNo].Data[colNo].VarCharValue;
-          table += '</td>';
-        }
-        table += '</tr>';
-      }
-      table += '</table>';
-      document.getElementsByTagName('body')[0].innerHTML = table;
-    }
- 
-    startQueryExecution(function(queryExecutionId) {
-      getQueryExecution(queryExecutionId, function() {
-        getQueryResults(queryExecutionId, function(data) {
-          showData(data);
-        });
-      });
-    });
-</script>
-</head>
- 
-<body>
-</body>
- 
-</html>
-
-<!--<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8" />
     <title>
       history
     </title>
+    <style>
+      body{
+        width:1000px;
+      }
+      th,td{
+        padding:5px 10px;
+        max-width: 300px;
+      }
+    </style>
   </head>
   <body>
       <h1>履歴検索</h1>
       <input type="text" name="search" id="search">
       <button>検索</button>
-      <div id="results"></div>
+      <table>
+        <thead>
+          <th>url</th>
+          <th>timestamp</th>
+          <th>body</th>
+        </thead>
+        <tbody id="results">
+
+        </tbody>
+      </table>
       <script src="jquery.js"></script>
       <script src="popup.js"></script>
   </body>
 </html>
--->
